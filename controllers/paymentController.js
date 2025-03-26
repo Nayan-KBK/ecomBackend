@@ -58,7 +58,7 @@ exports.getPayments = async (req, res) => {
 
     const payments = response.data.items.map((payment) => ({
       id: payment.id,
-      amount: payment.amount / 100, // Convert to INR
+      amount: payment.amount / 100, 
       status:
         payment.status === "captured"
           ? "Success"
@@ -101,5 +101,29 @@ exports.issueRefund = async (req, res) => {
   } catch (error) {
     console.error("Refund Error:", error.response?.data || error.message);
     res.status(500).json({ success: false, message: "Refund failed" });
+  }
+};
+
+
+exports.capturePayment = async (req, res) => {
+  const { payment_id, amount } = req.body;
+
+  try {
+    // Amount is in paise (1 INR = 100 paise)
+    const response = await axios.post(
+      `https://api.razorpay.com/v1/payments/${payment_id}/capture`,
+      { amount: amount * 100 },
+      {
+        auth: {
+          username: process.env.RAZORPAY_KEY_ID,
+          password: process.env.RAZORPAY_KEY_SECRET,
+        },
+      }
+    );
+
+    res.json({ success: true, data: response.data });
+  } catch (error) {
+    console.error("Capture Error:", error.response?.data || error.message);
+    res.status(500).json({ success: false, message: "Payment capture failed" });
   }
 };
