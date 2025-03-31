@@ -5,11 +5,11 @@ const File = require('../models/FileModel.js');
 
 exports.uploadFile = async (req, res) => {
     try {
-        // ✅ Authorize Backblaze
-        await authorize();
+        await authorize(); // ✅ Authorize Backblaze
 
         const filePath = req.file.path;
-        const fileName = req.file.filename;
+        const originalFileName = req.file.originalname;
+        const storedFileName = `${Date.now()}-${originalFileName}`; // ✅ Add timestamp to prevent conflicts
         const tags = req.body.tags ? req.body.tags.split(',') : [];
 
         // ✅ Read File
@@ -23,20 +23,21 @@ exports.uploadFile = async (req, res) => {
         const uploadUrl = uploadUrlResponse.data.uploadUrl;
         const authToken = uploadUrlResponse.data.authorizationToken;
 
-        // ✅ Step 2: Upload the File to Backblaze
+        // ✅ Step 2: Upload the File to Backblaze (Use `storedFileName`)
         const uploadResponse = await b2.uploadFile({
             uploadUrl: uploadUrl,
             uploadAuthToken: authToken,
-            fileName: fileName,
+            fileName: storedFileName, // ✅ Use renamed file
             data: fileBuffer
         });
 
         // ✅ Step 3: Construct File URL manually
-        const fileUrl = `https://f002.backblazeb2.com/file/${process.env.B2_BUCKET_NAME}/${fileName}`;
+        const fileUrl = `https://${process.env.B2_BUCKET_NAME}.s3.us-east-005.backblazeb2.com/${storedFileName}`;
 
         // ✅ Step 4: Save File Data in MongoDB
         const fileData = new File({
-            fileName: req.file.originalname,
+            originalFileName: originalFileName, // ✅ Store original name
+            storedFileName: storedFileName,     // ✅ Store actual Backblaze name
             tags: tags,
             fileUrl: fileUrl
         });

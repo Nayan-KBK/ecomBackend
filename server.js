@@ -11,6 +11,7 @@ const authRoutes = require("./routes/authRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const clientRoutes = require("./routes/clientRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const previewRoutes = require("./routes/previewRoutes");
 
 
 
@@ -29,6 +30,7 @@ app.use("/auth", authRoutes);
 app.use('/upload', uploadRoutes);
 app.use("/client", clientRoutes);
 app.use("/payments", paymentRoutes);
+app.use("/api/preview", previewRoutes);
 
 
 
